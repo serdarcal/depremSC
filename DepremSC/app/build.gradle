@@ -1,0 +1,115 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'org.jetbrains.dokka-android'
+
+def isRelease = false
+
+File googleServicesFile = rootProject.file("app/google-services.json")
+
+def versionMajor = 1
+def versionMinor = 4
+def versionPatch = 4
+android {
+    compileSdkVersion 31
+    defaultConfig {
+        applicationId "com.github.bkhezry.earthquake"
+        minSdkVersion 21
+        targetSdkVersion 31
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildFeatures {
+        viewBinding = true
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            ext.alwaysUpdateBuildId = false
+            splits.abi.enable = false
+            splits.density.enable = false
+            aaptOptions.cruncherEnabled = false
+            minifyEnabled false
+            defaultConfig {
+                resConfigs "en", "xxhdpi"
+            }
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+    androidExtensions {
+        experimental = true
+    }
+    dokka {
+        outputFormat = 'html'
+        outputDirectory = "$buildDir/javadoc"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation 'androidx.recyclerview:recyclerview:1.3.0-alpha01'
+    implementation 'com.google.android.material:material:1.5.0-alpha04'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
+    implementation 'androidx.core:core-ktx:1.6.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.1'
+
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    //use in development
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2'
+
+    // RxJava
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+
+    implementation 'com.google.maps.android:android-maps-utils:0.6.2'
+    implementation 'com.mikepenz:fastadapter:4.1.1'
+    implementation "com.mikepenz:fastadapter-extensions-ui:4.1.1"
+    implementation "com.mikepenz:itemanimators:1.1.0"
+
+    implementation 'androidx.browser:browser:1.3.0'
+    implementation 'com.blankj:utilcodex:1.30.6'
+    implementation "androidx.preference:preference-ktx:1.1.1"
+
+    if (isRelease) {
+        implementation 'com.google.firebase:firebase-crashlytics:17.2.2'
+        implementation 'com.google.firebase:firebase-analytics:17.6.0'
+        implementation 'com.google.firebase:firebase-perf:19.0.0'
+    }
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
+android.applicationVariants.all { variant ->
+    def appName = "Earthquake"
+    variant.outputs.all { output ->
+        def newApkName
+        newApkName = "${appName}-${output.baseName}-${variant.versionName}.apk"
+        output.outputFileName = new File(newApkName)
+    }
+}
+kapt {
+    generateStubs = true
+}
+if (googleServicesFile.exists()) {
+    System.out.println("Google Service File Exist")
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+}
